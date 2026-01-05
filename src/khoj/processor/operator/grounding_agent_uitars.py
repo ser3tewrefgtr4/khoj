@@ -65,6 +65,22 @@ class GroundingAgentUitars:
     """
     ).lstrip()
 
+    @staticmethod
+    def _parse_box(box_value: Any) -> list | tuple | None:
+        if box_value is None:
+            return None
+        if isinstance(box_value, (list, tuple)):
+            return box_value
+        try:
+            parsed = ast.literal_eval(str(box_value))
+        except (ValueError, SyntaxError):
+            logger.warning("Invalid box format: %s", box_value)
+            return None
+        if isinstance(parsed, (list, tuple)):
+            return parsed
+        logger.warning("Invalid box type: %s", type(parsed))
+        return None
+
     def __init__(
         self,
         model_name: str,
@@ -679,10 +695,14 @@ class GroundingAgentUitars:
                 start_box = action_inputs.get("start_box")
                 end_box = action_inputs.get("end_box")
                 if start_box and end_box:
-                    x1, y1, x2, y2 = eval(start_box)  # Assuming box is in [x1, y1, x2, y2]
+                    start_box = self._parse_box(start_box)
+                    end_box = self._parse_box(end_box)
+                    if not start_box or not end_box:
+                        continue
+                    x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     sx = round(float((x1 + x2) / 2) * image_width, 3)
                     sy = round(float((y1 + y2) / 2) * image_height, 3)
-                    x1, y1, x2, y2 = eval(end_box)  # Assuming box is in [x1, y1, x2, y2]
+                    x1, y1, x2, y2 = end_box  # Assuming box is in [x1, y1, x2, y2]
                     ex = round(float((x1 + x2) / 2) * image_width, 3)
                     ey = round(float((y1 + y2) / 2) * image_height, 3)
                     actions.append(MoveAction(x=sx, y=sy))
@@ -692,7 +712,10 @@ class GroundingAgentUitars:
                 # Parsing scroll action
                 start_box = action_inputs.get("start_box")
                 if start_box:
-                    x1, y1, x2, y2 = eval(start_box)  # Assuming box is in [x1, y1, x2, y2]
+                    start_box = self._parse_box(start_box)
+                    if not start_box:
+                        continue
+                    x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     x = round(float((x1 + x2) / 2) * image_width, 3)
                     y = round(float((y1 + y2) / 2) * image_height, 3)
 
@@ -717,7 +740,9 @@ class GroundingAgentUitars:
                 start_box = action_inputs.get("start_box")
                 start_box = str(start_box)
                 if start_box:
-                    start_box = eval(start_box)
+                    start_box = self._parse_box(start_box)
+                    if not start_box:
+                        continue
                     if len(start_box) == 4:
                         x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     elif len(start_box) == 2:
@@ -876,10 +901,14 @@ class GroundingAgentUitars:
                 start_box = action_inputs.get("start_box")
                 end_box = action_inputs.get("end_box")
                 if start_box and end_box:
-                    x1, y1, x2, y2 = eval(start_box)  # Assuming box is in [x1, y1, x2, y2]
+                    start_box = self._parse_box(start_box)
+                    end_box = self._parse_box(end_box)
+                    if not start_box or not end_box:
+                        continue
+                    x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     sx = round(float((x1 + x2) / 2) * image_width, 3)
                     sy = round(float((y1 + y2) / 2) * image_height, 3)
-                    x1, y1, x2, y2 = eval(end_box)  # Assuming box is in [x1, y1, x2, y2]
+                    x1, y1, x2, y2 = end_box  # Assuming box is in [x1, y1, x2, y2]
                     ex = round(float((x1 + x2) / 2) * image_width, 3)
                     ey = round(float((y1 + y2) / 2) * image_height, 3)
                     pyautogui_code += f"\npyautogui.moveTo({sx}, {sy})\n\npyautogui.dragTo({ex}, {ey}, duration=1.0)\n"
@@ -888,7 +917,10 @@ class GroundingAgentUitars:
                 # Parsing scroll action
                 start_box = action_inputs.get("start_box")
                 if start_box:
-                    x1, y1, x2, y2 = eval(start_box)  # Assuming box is in [x1, y1, x2, y2]
+                    start_box = self._parse_box(start_box)
+                    if not start_box:
+                        continue
+                    x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     x = round(float((x1 + x2) / 2) * image_width, 3)
                     y = round(float((y1 + y2) / 2) * image_height, 3)
 
@@ -915,7 +947,9 @@ class GroundingAgentUitars:
                 start_box = action_inputs.get("start_box")
                 start_box = str(start_box)
                 if start_box:
-                    start_box = eval(start_box)
+                    start_box = self._parse_box(start_box)
+                    if not start_box:
+                        continue
                     if len(start_box) == 4:
                         x1, y1, x2, y2 = start_box  # Assuming box is in [x1, y1, x2, y2]
                     elif len(start_box) == 2:
